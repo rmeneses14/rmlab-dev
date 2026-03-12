@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>rmlab.dev — Digital Lab</title>
+
+  <!-- PWA META TAGS -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="rmlab" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180x180.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png" />
+  <link rel="apple-touch-icon" sizes="120x120" href="icons/icon-120x120.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16x16.png" />
+  <meta name="msapplication-TileColor" content="#0a0a0a" />
+  <meta name="msapplication-TileImage" content="icons/icon-144x144.png" />
+
+  <!-- SEO -->
+  <meta name="description" content="rmlab.dev — Laboratorio digital de RM Sites. Proyectos, tools y apps creadas con FastAPI, PWA y GitHub Pages." />
+  <meta property="og:title" content="rmlab.dev — Digital Lab" />
+  <meta property="og:description" content="Showcase de proyectos digitales: calculadoras, analizadores, tracking tools y más." />
+  <meta property="og:url" content="https://rmlab.dev" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── VARIABLES ───────────────────────────────────────────────────────────── */
+    :root {
+      --primary:        #6b7c3a;
+      --primary-bright: #8fa84d;
+      --primary-glow:   #9dbf52;
+      --primary-dim:    #4a5628;
+      --primary-deep:   #2e3618;
+
+      --bg:             #0a0a0a;
+      --bg-card:        #111111;
+      --bg-panel:       #161616;
+      --bg-input:       #1c1c1c;
+
+      --border:         #1f1f1f;
+      --border-primary: rgba(107, 124, 58, 0.35);
+      --border-glow:    rgba(107, 124, 58, 0.6);
+
+      --text:           #e8e8e0;
+      --text-dim:       #7a7a72;
+      --text-bright:    #f4f4ec;
+
+      --safe-top:    env(safe-area-inset-top,    0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --safe-left:   env(safe-area-inset-left,   0px);
+      --safe-right:  env(safe-area-inset-right,  0px);
+    }
+
+    /* ── RESET & BASE ─────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      line-height: 1.6;
+      min-height: 100dvh;
+      padding-top: var(--safe-top);
+      padding-bottom: calc(40px + var(--safe-bottom));
+      padding-left: var(--safe-left);
+      padding-right: var(--safe-right);
+      overflow-x: hidden;
+    }
+
+    /* ── GRAIN OVERLAY ────────────────────────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 128px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* ── NAV ──────────────────────────────────────────────────────────────────── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      padding: calc(16px + var(--safe-top)) 40px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(to bottom, rgba(10,10,10,0.98) 0%, rgba(10,10,10,0.85) 70%, transparent 100%);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 0.08em;
+      color: var(--text-bright);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--primary-glow);
+      border-radius: 50%;
+      box-shadow: 0 0 12px var(--primary-glow);
+      animation: pulse-dot 2.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 12px var(--primary-glow); }
+      50% { opacity: 0.5; box-shadow: 0 0 4px var(--primary-glow); }
+    }
+
+    .nav-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--primary-bright);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    /* ── HERO ─────────────────────────────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      z-index: 1;
+      padding: 160px 40px 80px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .hero-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--primary-bright);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      animation: fade-up 0.8s ease forwards 0.2s;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 40px;
+      height: 1px;
+      background: var(--primary-bright);
+    }
+
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3.5rem, 10vw, 8rem);
+      line-height: 0.92;
+      letter-spacing: 0.02em;
+      color: var(--text-bright);
+      margin-bottom: 32px;
+      opacity: 0;
+      animation: fade-up 0.8s ease forwards 0.4s;
+    }
+
+    .hero-title .accent {
+      color: var(--primary-bright);
+      display: block;
+    }
+
+    .hero-desc {
+      font-size: 1.05rem;
+      color: var(--text-dim);
+      max-width: 520px;
+      line-height: 1.75;
+      opacity: 0;
+      animation: fade-up 0.8s ease forwards 0.6s;
+    }
+
+    /* ── GRID LINE DECORATION ─────────────────────────────────────────────────── */
+    .grid-decoration {
+      position: absolute;
+      top: 80px;
+      right: -20px;
+      width: 400px;
+      height: 400px;
+      opacity: 0.06;
+      pointer-events: none;
+    }
+
+    /* ── SECTION ──────────────────────────────────────────────────────────────── */
+    .section {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 40px 100px;
+    }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── PROJECT GRID ─────────────────────────────────────────────────────────── */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .project-card {
+      background: var(--bg-card);
+      padding: 36px 32px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.25s ease;
+      cursor: pointer;
+    }
+
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary-dim), var(--primary-bright));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.35s ease;
+    }
+
+    .project-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 20% 50%, rgba(107,124,58,0.06) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    .project-card:hover {
+      background: var(--bg-panel);
+    }
+
+    .project-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .project-card:hover::after {
+      opacity: 1;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .card-icon {
+      font-size: 2rem;
+      line-height: 1;
+      filter: grayscale(0.2);
+    }
+
+    .card-status {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 2px;
+      background: rgba(107,124,58,0.12);
+      color: var(--primary-bright);
+      border: 1px solid var(--border-primary);
+      white-space: nowrap;
+    }
+
+    .card-status.wip {
+      background: rgba(180, 120, 30, 0.1);
+      color: #c8943a;
+      border-color: rgba(180, 120, 30, 0.3);
+    }
+
+    .card-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 0.04em;
+      color: var(--text-bright);
+      line-height: 1.1;
+    }
+
+    .card-desc {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      line-height: 1.65;
+      flex: 1;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      border-radius: 2px;
+    }
+
+    .card-link {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: var(--primary-bright);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      transition: gap 0.2s ease;
+    }
+
+    .project-card:hover .card-link {
+      gap: 14px;
+    }
+
+    .card-link::after {
+      content: '→';
+    }
+
+    /* ── FEATURED CARD (wide) ─────────────────────────────────────────────────── */
+    .project-card.featured {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      align-items: center;
+      gap: 48px;
+      padding: 48px 40px;
+    }
+
+    .featured-left { flex: 1; }
+    .featured-right {
+      flex: 0 0 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .featured-stat {
+      text-align: right;
+    }
+
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.4rem;
+      color: var(--primary-bright);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    /* ── ABOUT STRIP ──────────────────────────────────────────────────────────── */
+    .about-strip {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 40px 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin-bottom: 80px;
+    }
+
+    .about-cell {
+      background: var(--bg-card);
+      padding: 40px 36px;
+    }
+
+    .about-cell:first-child {
+      border-right: 1px solid var(--border);
+    }
+
+    .about-heading {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.06em;
+      color: var(--text-bright);
+      margin-bottom: 12px;
+    }
+
+    .about-text {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      line-height: 1.75;
+    }
+
+    .mono-highlight {
+      font-family: 'DM Mono', monospace;
+      color: var(--primary-bright);
+      font-size: 0.85em;
+    }
+
+    /* ── FOOTER ───────────────────────────────────────────────────────────────── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 32px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+    }
+
+    .footer-note {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      opacity: 0.6;
+    }
+
+    /* ── PWA INSTALL ──────────────────────────────────────────────────────────── */
+    #pwa-install-btn {
+      position: fixed;
+      bottom: calc(20px + var(--safe-bottom));
+      right: 20px;
+      z-index: 200;
+      background: var(--primary);
+      color: var(--text-bright);
+      border: none;
+      padding: 12px 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 2px;
+      box-shadow: 0 4px 20px rgba(107,124,58,0.3);
+    }
+
+    /* ── ANIMATIONS ───────────────────────────────────────────────────────────── */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ── RESPONSIVE ───────────────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .project-card.featured {
+        flex-direction: column;
+        gap: 24px;
+      }
+      .featured-right {
+        flex: auto;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        width: 100%;
+      }
+      .featured-stat { text-align: left; }
+    }
+
+    @media (max-width: 768px) {
+      nav { padding: calc(12px + var(--safe-top)) 20px 12px; }
+      .hero { padding: 120px 20px 60px; }
+      .section { padding: 0 20px 60px; }
+      .projects-grid { grid-template-columns: 1fr; }
+      .about-strip { grid-template-columns: 1fr; padding: 0 20px 40px; }
+      .about-cell:first-child { border-right: none; border-bottom: 1px solid var(--border); }
+      footer { padding: 24px 20px; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title { line-height: 0.9; }
+      .project-card { padding: 28px 20px; }
+      .project-card.featured { padding: 28px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a class="logo" href="/">
+      <span class="logo-dot"></span>
+      rmlab<span style="color:var(--primary-bright)">.dev</span>
+    </a>
+    <span class="nav-tag">Digital Lab / CR</span>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <svg class="grid-decoration" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#6b7c3a" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="400" height="400" fill="url(#grid)" />
+      <circle cx="200" cy="200" r="120" stroke="#6b7c3a" stroke-width="0.5" stroke-dasharray="4 8"/>
+      <circle cx="200" cy="200" r="60" stroke="#6b7c3a" stroke-width="0.5"/>
+    </svg>
+
+    <p class="hero-eyebrow">RM Sites · Laboratorio Digital</p>
+    <h1 class="hero-title">
+      Proyectos<br>
+      <span class="accent">que funcionan.</span>
+    </h1>
+    <p class="hero-desc">
+      Tools, apps y experimentos construidos con FastAPI, PWA y GitHub Pages.
+      Cada proyecto resuelve un problema real — desde tracking financiero hasta análisis de cartas MTG.
+    </p>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="section">
+    <p class="section-label reveal">Proyectos activos</p>
+
+    <div class="projects-grid">
+
+      <!-- FEATURED: BCCR -->
+      <a class="project-card featured reveal" href="https://rmeneses14.github.io/BCCRAnalisisTC/" target="_blank" rel="noopener">
+        <div class="featured-left">
+          <div class="card-header">
+            <span class="card-icon">📈</span>
+            <span class="card-status">Live</span>
+          </div>
+          <h2 class="card-title" style="font-size:2.2rem; margin-top:16px;">BCCR · Análisis TC</h2>
+          <p class="card-desc" style="font-size:0.95rem; max-width:500px;">
+            Monitor del tipo de cambio USD/CRC con scraping del Banco Central de Costa Rica.
+            Modelo predictivo con EMA-7/14, momentum con decaimiento exponencial, patrones por día de semana y señales de política monetaria.
+          </p>
+          <div class="card-tags" style="margin-top:16px;">
+            <span class="tag">FastAPI</span>
+            <span class="tag">Render</span>
+            <span class="tag">PWA</span>
+            <span class="tag">Predictive Model</span>
+            <span class="tag">BCCR Scraping</span>
+          </div>
+          <span class="card-link" style="margin-top:20px;">bccr-hist.onrender.com</span>
+        </div>
+        <div class="featured-right">
+          <div class="featured-stat">
+            <div class="stat-value">EMA</div>
+            <div class="stat-label">7 / 14 días</div>
+          </div>
+          <div class="featured-stat">
+            <div class="stat-value">Live</div>
+            <div class="stat-label">Datos en tiempo real</div>
+          </div>
+        </div>
+      </a>
+
+      <!-- MTG Toph's Forge -->
+      <a class="project-card reveal" href="https://rmeneses14.github.io/MTG_RANKING_APP/" target="_blank" rel="noopener">
+        <div class="card-header">
+          <span class="card-icon">⚔️</span>
+          <span class="card-status">Live</span>
+        </div>
+        <h2 class="card-title">Toph's Forge</h2>
+        <p class="card-desc">Analizador de Commander decks para Magic: The Gathering. Ranking de cartas, estadísticas por tipo y flavor text rotatorio.</p>
+        <div class="card-tags">
+          <span class="tag">MTG</span>
+          <span class="tag">Commander</span>
+          <span class="tag">PWA</span>
+          <span class="tag">Moxfield</span>
+        </div>
+        <span class="card-link">MTG Ranking App</span>
+      </a>
+
+      <!-- ARK Breeding Calc -->
+      <a class="project-card reveal" href="https://rmeneses14.github.io/ark-breeding-calc/" target="_blank" rel="noopener">
+        <div class="card-header">
+          <span class="card-icon">🦬</span>
+          <span class="card-status">Live</span>
+        </div>
+        <h2 class="card-title">ARK Breeding Calc</h2>
+        <p class="card-desc">Calculadora de estadísticas de crías en ARK: Survival Ascended. Especializada en Bison con análisis de stats y herencia genética.</p>
+        <div class="card-tags">
+          <span class="tag">ARK ASA</span>
+          <span class="tag">FastAPI</span>
+          <span class="tag">PWA</span>
+          <span class="tag">Breeding</span>
+        </div>
+        <span class="card-link">Ver calculadora</span>
+      </a>
+
+      <!-- PhotoRoom -->
+      <a class="project-card reveal" href="https://rmeneses14.github.io/photoroom/" target="_blank" rel="noopener">
+        <div class="card-header">
+          <span class="card-icon">📷</span>
+          <span class="card-status">Live</span>
+        </div>
+        <h2 class="card-title">PhotoRoom</h2>
+        <p class="card-desc">Marco digital PWA para fotos 360° de Insta360. Agrupación por orientación, visualización inmersiva y gestión desde FastAPI.</p>
+        <div class="card-tags">
+          <span class="tag">Insta360</span>
+          <span class="tag">360°</span>
+          <span class="tag">FastAPI</span>
+          <span class="tag">PWA</span>
+        </div>
+        <span class="card-link">Ver frames</span>
+      </a>
+
+      <!-- Baloo Game -->
+      <a class="project-card reveal" href="https://rmeneses14.github.io/fly_game/" target="_blank" rel="noopener">
+        <div class="card-header">
+          <span class="card-icon">🐾</span>
+          <span class="card-status">Live</span>
+        </div>
+        <h2 class="card-title">Baloo Adventure</h2>
+        <p class="card-desc">Juego estilo Flappy Bird protagonizado por Baloo. Migrado de Godot, convertido a PWA instalable con sprite processing.</p>
+        <div class="card-tags">
+          <span class="tag">Game</span>
+          <span class="tag">PWA</span>
+          <span class="tag">Godot</span>
+          <span class="tag">Canvas</span>
+        </div>
+        <span class="card-link">Jugar ahora</span>
+      </a>
+
+      <!-- Peninsula Properties -->
+      <a class="project-card reveal" href="https://rmeneses14.github.io/peninsula-properties/" target="_blank" rel="noopener">
+        <div class="card-header">
+          <span class="card-icon">🌿</span>
+          <span class="card-status">Live</span>
+        </div>
+        <h2 class="card-title">Peninsula Properties</h2>
+        <p class="card-desc">Listing bilingüe de propiedad en Osa Peninsula, Costa Rica. 45 hectáreas de selva tropical a $450K. SEO optimizado, protección de contenido.</p>
+        <div class="card-tags">
+          <span class="tag">Real Estate</span>
+          <span class="tag">Bilingual</span>
+          <span class="tag">SEO</span>
+          <span class="tag">GitHub Pages</span>
+        </div>
+        <span class="card-link">Ver propiedad</span>
+      </a>
+
+      <!-- ZenFlow -->
+      <a class="project-card reveal" href="#" target="_blank" rel="noopener">
+        <div class="card-header">
+          <span class="card-icon">🧘</span>
+          <span class="card-status wip">Client</span>
+        </div>
+        <h2 class="card-title">ZenFlow Yoga</h2>
+        <p class="card-desc">Sistema de booking y gestión para estudio de yoga. Supabase + FastAPI + Vanilla JS. RLS, PWA, clases en tiempo real.</p>
+        <div class="card-tags">
+          <span class="tag">Supabase</span>
+          <span class="tag">FastAPI</span>
+          <span class="tag">PWA</span>
+          <span class="tag">Booking</span>
+        </div>
+        <span class="card-link">Proyecto cliente</span>
+      </a>
+
+      <!-- More coming -->
+      <div class="project-card reveal" style="justify-content:center; align-items:center; opacity:0.4; cursor:default; min-height:200px;">
+        <div style="text-align:center;">
+          <div style="font-family:'DM Mono',monospace; font-size:0.68rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--text-dim); margin-bottom:12px;">Próximamente</div>
+          <div style="font-family:'Bebas Neue',sans-serif; font-size:1.4rem; color:var(--text-dim);">+ Proyectos en camino</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ABOUT STRIP -->
+  <div style="position:relative; z-index:1; max-width:1100px; margin:0 auto; padding:0 40px;">
+    <div class="about-strip" style="border:1px solid var(--border); padding:0; margin-bottom:60px;">
+      <div class="about-cell reveal">
+        <h3 class="about-heading">Stack habitual</h3>
+        <p class="about-text">
+          Backend en <span class="mono-highlight">FastAPI</span> sobre Docker, desplegado en <span class="mono-highlight">Render</span> free tier.
+          Frontend como <span class="mono-highlight">PWA</span> en un solo archivo HTML/CSS/JS, publicado en <span class="mono-highlight">GitHub Pages</span>.
+          Sin frameworks CSS externos — todo custom, todo liviano.
+        </p>
+      </div>
+      <div class="about-cell reveal">
+        <h3 class="about-heading">Sobre rmlab.dev</h3>
+        <p class="about-text">
+          Laboratorio digital bajo la marca <span class="mono-highlight">RM Sites</span> desde Costa Rica 🇨🇷.
+          Cada subdominio es un proyecto independiente. Todos los builds usan el sistema
+          <span class="mono-highlight">Bellatrix / Saiph / Antares</span> — scaffolding propio para ir rápido sin perder calidad.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span class="footer-logo">rmlab.dev</span>
+    <span class="footer-note">© 2025 RM Sites · Costa Rica · Hecho con FastAPI + GitHub Pages</span>
+  </footer>
+
+  <!-- PWA INSTALL -->
+  <button id="pwa-install-btn" hidden onclick="pwaInstall()">⬇ Instalar App</button>
+
+  <script>
+    // ── PWA INSTALL PROMPT ──────────────────────────────────────────────────────
+    let deferredPrompt;
+    const installBtn = document.getElementById('pwa-install-btn');
+
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.hidden = false;
+    });
+
+    function pwaInstall() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(() => {
+        deferredPrompt = null;
+        installBtn.hidden = true;
+      });
+    }
+
+    window.addEventListener('appinstalled', () => { installBtn.hidden = true; });
+
+    // ── SERVICE WORKER ──────────────────────────────────────────────────────────
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+
+    // ── REVEAL ON SCROLL ────────────────────────────────────────────────────────
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add('visible'), i * 80);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
